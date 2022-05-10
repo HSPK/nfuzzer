@@ -29,3 +29,4 @@ fuzzer/logs/
 test/nacos/
 test/nacos_bak
 test/nacos-server.jar
+test/shm/
