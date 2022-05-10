@@ -1,22 +1,19 @@
 #!/bin/bash
 
 # params
-ip=`ip addr show eth0 | grep 'inet ' | awk '{print $2}' | sed 's/\/.*//'`
-port=8848
-expand="nacos/v1/cs/configs?&accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTY1MjAyMzY1Mn0.j-TZPrkWja53L4EHmB8V4W92td3IJVJXCnQlGMVzgqM"
-username=nacos
-password=nacos
-communicationMthod=post
-messageBody="dataId=123&group=DEFAULT_GROUP&content=123&desc=123&config_tags=123&type=text&appName=123&tenant=&namespaceId="
-serverIp=$ip
+webAppHost=`ip addr show eth0 | grep 'inet ' | awk '{print $2}' | sed 's/\/.*//'`
+webAppPort=8848
+token="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTY1MjEyMjkxMn0.A5nXJhrN1pV_KTZFiKyMp_kjBaklYfKE6NbosWCELd8"
+body="dataId=123&group=DEFAULT_GROUP&content=123&desc=123&config_tags=123&type=text&appName=123&tenant=&namespaceId="
+
+bitmapServerHost=$webAppHost
 # serverIp=127.0.0.1
-serverPort=23333
-montiorPort=null
+bitmapServerPort=23333
 cur_dir=$(pwd)
 
 # nfuzzer.jar path
 nfuzzer=../instrumentor/build/libs/nfuzzer.jar
-echo $messageBody > ./in_dir/example
+echo $body > ./in_dir/example
 
 # build pit file
 echo building pit file...
@@ -25,7 +22,7 @@ java -classpath .:$nfuzzer nfuzzer.buildpit.BuildPit in_dir/example >/dev/null 2
 
 # start nfuzzer communication
 echo starting nfuzzer.Nfuzzer...
-java -classpath .:$nfuzzer nfuzzer.Nfuzzer -h $serverIp -cp $serverPort -p 7007 testURLconnect @@ $ip $port $expand $communicationMthod >/dev/null 2>&1 &
+java -classpath .:$nfuzzer nfuzzer.Nfuzzer -hb $bitmapServerHost -pb $bitmapServerPort -pf 7007 -hw $webAppHost -pw $webAppPort nacos $token >/dev/null 2>&1 &
 # mkdir
 indir=in_dir
 outdir=out_dir

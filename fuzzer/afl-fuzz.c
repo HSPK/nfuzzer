@@ -5877,11 +5877,15 @@ static u8 fuzz_one(char** argv) {
   }
 
   /* Deferred cracking */
-  if (smart_mode && !queue_cur->chunk && (initial_queue_num > 0
-      || UR(100) < (get_cur_time() - last_path_time) / 50)) {
+  if (smart_mode && !queue_cur->chunk && initial_queue_num > 0) {
     update_input_structure(queue_cur->fname, queue_cur);
     --initial_queue_num;
   }
+  // if (smart_mode && !queue_cur->chunk && (initial_queue_num > 0
+  //     || UR(100) < (get_cur_time() - last_path_time) / 50)) {
+  //   update_input_structure(queue_cur->fname, queue_cur);
+  //   --initial_queue_num;
+  // }
 
   /************
    * TRIMMING *

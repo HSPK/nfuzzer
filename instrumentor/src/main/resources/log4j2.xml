@@ -13,6 +13,9 @@
         <File name="covSend_log_file" fileName="logs/cov_send.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
+        <File name="http_log_file" fileName="logs/http.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
         <Async name="Async">
             <AppenderRef ref="LogToFile"/>
         </Async>
@@ -26,6 +29,9 @@
         </Logger>
         <Logger name="nfuzzer.socket" level="debug">
             <AppenderRef ref="covSend_log_file"/>
+        </Logger>
+        <Logger name="nfuzzer.webclient.NacosWebClient" level="debug">
+            <AppenderRef ref="http_log_file"/>
         </Logger>
         <Root level="error">
             <AppenderRef ref="logToConsole" level="error"/>
