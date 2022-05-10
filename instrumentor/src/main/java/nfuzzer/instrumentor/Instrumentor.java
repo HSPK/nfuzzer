@@ -3,152 +3,196 @@ package nfuzzer.instrumentor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import org.apache.commons.cli.*;
 import org.apache.commons.io.IOUtils;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 public class Instrumentor {
+  // default args
+  private static String inputPath;
+  private static String outputPath;
+  private static final String DEFAULT_OUT_PATH = "ins_out";
+  private static String shmPath;
+  private static final String DEFAULT_SHM_PATH = "shm";
+  private static int covPort;
+  private static final int DEFAULT_COV_PORT = 60020;
+  public static ClassLoader classloader;
 
-    public static ClassLoader classloader;
+  private static final Logger logger = LogManager.getLogger(Instrumentor.class);
 
-    public static void main(String[] args) throws Exception {
-        // classloader
-        classloader = Thread.currentThread().getContextClassLoader();
+  private static void parseArgs(String[] args) throws ParseException {
+    // command line arguments
+    Options options = new Options();
+    options.addOption("i", true, "input class file/dir");
+    options.addOption("o", true, "output class file/dir");
+    options.addOption("sp", true, "share memory dir");
+    options.addOption("cp", true, "covSend port");
+    options.addOption("help", false, "print this message");
 
-        Options options = Options.v();
-        CmdLineParser parser = new CmdLineParser(options);
+    // parse command line parser
+    CommandLineParser parser = new DefaultParser();
+    CommandLine cmd = parser.parse(options, args);
+    if (cmd.hasOption("help")) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("java Instrument [options]", options);
+      System.exit(0);
+    }
+    if (!cmd.hasOption("i")) {
+      logger.error("must have an input path");
+      System.exit(-1);
+    }
+    inputPath = cmd.getOptionValue("i");
+    outputPath = cmd.getOptionValue("o", DEFAULT_OUT_PATH);
+    shmPath = cmd.getOptionValue("sp", DEFAULT_SHM_PATH);
+    covPort = Integer.parseInt(cmd.getOptionValue("cp", String.valueOf(DEFAULT_COV_PORT)));
+  }
 
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            parser.printUsage(System.err);
-            return;
+  private static Set<String> getInputClasses() {
+    Set<String> set = new HashSet<>();
+    if (inputPath.endsWith(".class")) {
+      logger.debug("add to input set: " + inputPath);
+      set.add(inputPath);
+    } else {
+      // walk dirs, add all .class file to set
+      try (Stream<Path> entries = Files.walk(Paths.get(inputPath))) {
+        entries.filter(Files::isRegularFile).forEach(filePath -> {
+          // remove root directory
+          String name = filePath.subpath(1, filePath.getNameCount()).toString();
+          if (name.endsWith(".class")) {
+            set.add(name);
+            logger.debug("add to input set: " + name);
+          }
+        });
+      } catch (IOException e) {
+        logger.error("io exception: " + e.getMessage());
+        System.exit(-1);
+      }
+      // add inputPath to class path
+//      try {
+//        File file = new File(inputPath);
+//        Method method = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+//        method.setAccessible(true);
+//        method.invoke(ClassLoader.getSystemClassLoader(), file.toURI().toURL());
+//      } catch (Exception e) {
+//        logger.error("failed to add " + inputPath + " to class path");
+//        System.exit(-1);
+//      }
+    }
+    return set;
+  }
+
+  public static void main(String[] args) {
+    logger.debug("instrument started...");
+    // classloader
+    classloader = Thread.currentThread().getContextClassLoader();
+    // parse command line arguments
+    try {
+      parseArgs(args);
+    } catch (ParseException e) {
+      logger.error("parse error: " + e.getMessage());
+      return;
+    }
+    // 加载全部类文件
+    logger.debug("get input classes: " + inputPath);
+    Set<String> inputClasses = getInputClasses();
+
+    Set<String> skipped = new HashSet<>();
+
+    for (String cls : inputClasses) {
+      logger.debug("instrumenting: " + cls);
+      String rootOfClass = Paths.get(inputPath).getName(0).toString();
+      // read bytecode from class file
+      InputStream bytecode = classloader.getResourceAsStream(Paths.get(rootOfClass, cls).toString());
+      if (bytecode == null) {
+        logger.error("class file not found: " + cls);
+        return;
+      }
+
+      // asm class writer
+      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+      ClassTransformer ct = new ClassTransformer(cw, shmPath);
+
+      try {
+        ClassReader cr = new ClassReader(bytecode);
+        cr.accept(ct, 8);
+        byte[] bytes = cw.toByteArray();
+        writeBytes(cls, bytes);
+      } catch (RuntimeException rte) {
+        if (rte.getMessage().contains("JSR/RET")) {
+          logger.error("[WARNING] RuntimeException during instrumentation: " + rte.getMessage());
+          logger.error("Skipping instrumentation of class " + cls);
+
+          loadAndWriteResource(cls);
+          skipped.add(cls);
+        } else {
+          logger.error("unknown runtimeException: " + rte.getMessage());
+          return;
         }
-
-        // 加载全部类文件
-        Set<String> inputClasses = Options.v().getInput();
-
-        Set<String> skipped = new HashSet<>();
-
-        for (String cls : inputClasses) {
-            recordLog.writeLog("Instrumenting class: " + cls);
-//			System.out.println("Instrumenting class: " + cls);
-            InputStream bytecode = classloader.getResourceAsStream(cls);
-            if (bytecode == null) {
-                System.err.println("class file not found: " + cls);
-                return;
-            }
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            ClassTransformer ct = new ClassTransformer(cw, options.getSp());
-            ClassReader cr;
-            cr = new ClassReader(bytecode);
-
-            try {
-                cr.accept(ct, 8);
-                byte[] bytes = cw.toByteArray();
-                writeClass(cls, bytes);
-            } catch (RuntimeException rte) {
-                if (rte.getMessage().contains("JSR/RET")) {
-
-                    //
-                    recordLog.writeLog("\n[WARNING] RuntimeException during instrumentation: " + rte.getMessage());
-                    recordLog.writeLog("Skipping instrumentation of class " + cls + "\n");
-                    //System.out.println("\n[WARNING] RuntimeException during instrumentation: " + rte.getMessage());
-                    //System.out.println("Skipping instrumentation of class " + cls + "\n");
-
-                    loadAndWriteResource(cls);
-                    skipped.add(cls);
-                } else {
-                    throw rte;
-                }
-            }
-
-        }
-
-        String[] resources = {"nfuzzer/Nfuzzer.class",
-                "nfuzzer/Nfuzzer$1.class",
-                "nfuzzer/Nfuzzer$2.class",
-                "nfuzzer/Nfuzzer$ApplicationCall.class",
-                "nfuzzer/Nfuzzer$FuzzRequest.class",
-                "nfuzzer/Nfuzzer$NullOutputStream.class",
-                "nfuzzer/Mem.class",
-                "nfuzzer/socket/CovSend.class",
-                "nfuzzer/socket/CovSendThread.class"};
-
-        for (String resource : resources) {
-            loadAndWriteResource(resource);
-        }
-
-        if (skipped.size() > 0) {
-
-            recordLog.writeLog("\nWARNING!!! Instrumentation of some classes has been skipped.");
-            recordLog.writeLog("This is due to the JSR/RET bytecode construct that is not supported by ASM.");
-            recordLog.writeLog("It is deprecated and should not be present in bytecode generated by a recent compiler.");
-            recordLog.writeLog("If this is your code, try using a different compiler.");
-            recordLog.writeLog(
-                    "If this is a library, there might be not too much harm in skipping instrumentation of these classes.");
-            recordLog.writeLog("Classes that were skipped:");
-
-            //System.out.println("\nWARNING!!! Instrumentation of some classes has been skipped.");
-            //System.out.println("This is due to the JSR/RET bytecode construct that is not supported by ASM.");
-            //System.out
-            //		.println("It is deprecated and should not be present in bytecode generated by a recent compiler.");
-            //System.out.println("If this is your code, try using a different compiler.");
-            //System.out.println(
-            //		"If this is a library, there might be not too much harm in skipping instrumentation of these classes.");
-            //System.out.println("Classes that were skipped:");
-            //for (String cls : skipped)
-            //	recordLog.writeLog(cls);
-            //System.out.println(cls);
-        }
+      } catch (IOException e) {
+        logger.error("io exception occurred when reading bytecode: " + e.getMessage());
+        return;
+      } catch (Exception e) {
+        logger.error("write class unknown error: " + e.getMessage());
+        return;
+      }
     }
 
-    private static void writeClass(String cls, byte[] bytes) throws Exception {
-        String path = Options.v().getOutput().endsWith("/") ?
-                Options.v().getOutput() + cls :
-                Options.v().getOutput() + "/" + cls;
-        Path out = Paths.get(path);
-        try {
-            Files.createDirectories(out.getParent());
-            Files.write(out, bytes);
+    String[] resources = {
+        "nfuzzer/Nfuzzer.class",
+        "nfuzzer/Nfuzzer$ApplicationCall.class",
+        "nfuzzer/Nfuzzer$FuzzRequest.class",
+        "nfuzzer/Mem.class",
+        "nfuzzer/socket/CovSend.class",
+        "nfuzzer/socket/CovSendThread.class"};
 
-            recordLog.writeLog("File written: " + path);
-            //System.out.println("File written: " + path);
-        } catch (IOException e) {
-            recordLog.writeLog("Error writing to file: " + path);
-            //System.err.println("Error writing to file: " + path);
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    for (String resource : resources) {
+      loadAndWriteResource(resource);
     }
 
-    private static void loadAndWriteResource(String resource) throws Exception {
-        InputStream is = classloader.getResourceAsStream(resource);
-        if (is == null) {
-
-            recordLog.writeLog("Error loading classes for addition to output");
-            //System.err.println("Error loading classes for addition to output");
-            return;
-        }
-        byte[] rbytes;
-        try {
-            rbytes = IOUtils.toByteArray(is);
-        } catch (IOException e) {
-
-            recordLog.writeLog("Error loading classes for addition to output");
-            //System.err.println("Error loading classes for addition to output");
-            e.printStackTrace();
-            return;
-        }
-        writeClass(resource, rbytes);
+    if (skipped.size() > 0) {
+      logger.error("WARNING!!! Instrumentation of some classes has been skipped.");
     }
+  }
+
+  // write bytes to file
+  private static void writeBytes(String filename, byte[] bytes) {
+    Path filePath = Paths.get(filename);
+    Path out = Paths.get(outputPath, filename);
+    try {
+      Files.createDirectories(out.getParent());
+      Files.write(out, bytes);
+      logger.debug("write file: " + out);
+    } catch (IOException e) {
+      logger.error("error writing file: " + out);
+    }
+  }
+
+  private static void loadAndWriteResource(String resource) {
+    InputStream is = classloader.getResourceAsStream(resource);
+    if (is == null) {
+      logger.error("read resource is null: " + resource);
+      return;
+    }
+    byte[] bytes;
+    try {
+      bytes = IOUtils.toByteArray(is);
+    } catch (IOException e) {
+      logger.error("io exception when read bytes: " + e.getMessage());
+      return;
+    }
+    writeBytes(resource, bytes);
+  }
 }

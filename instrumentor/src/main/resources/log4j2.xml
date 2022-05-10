@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="logToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <File name="LogToFile" fileName="logs/nfuzzer.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <File name="instrument_log_file" fileName="logs/instrument.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <File name="covSend_log_file" fileName="logs/cov_send.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+        <Async name="Async">
+            <AppenderRef ref="LogToFile"/>
+        </Async>
+    </Appenders>
+    <Loggers>
+        <Logger name="nfuzzer.Nfuzzer" level="debug">
+            <AppenderRef ref="Async"/>
+        </Logger>
+        <Logger name="nfuzzer.instrumentor" level="debug">
+            <AppenderRef ref="instrument_log_file"/>
+        </Logger>
+        <Logger name="nfuzzer.socket" level="debug">
+            <AppenderRef ref="covSend_log_file"/>
+        </Logger>
+        <Root level="error">
+            <AppenderRef ref="logToConsole" level="error"/>
+        </Root>
+    </Loggers>
+</Configuration>

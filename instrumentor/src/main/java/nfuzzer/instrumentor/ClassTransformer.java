@@ -1,5 +1,7 @@
 package nfuzzer.instrumentor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -7,11 +9,12 @@ import org.objectweb.asm.Opcodes;
 // 调用 MethodTransformer
 public class ClassTransformer extends ClassVisitor {
 
-	private String sp;
+	private final String shmPath;
+	private static final Logger logger = LogManager.getLogger(ClassTransformer.class);
 
-	public ClassTransformer(ClassVisitor cv, String sp) {
+	public ClassTransformer(ClassVisitor cv, String shmPath) {
 		super(Opcodes.ASM5, cv);
-		this.sp = sp;
+		this.shmPath = shmPath;
 	}
 
 	@Override
@@ -26,12 +29,8 @@ public class ClassTransformer extends ClassVisitor {
 		mv = cv.visitMethod(access, name, desc, signature, exceptions);
 
 		if (mv != null) {
-			try {
-				recordLog.writeLog("visit method: " + name);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			mv = new MethodTransformer(mv, sp);
+			logger.debug("visit method: " + name);
+			mv = new MethodTransformer(mv, shmPath);
 		}
 		return mv;
 	}

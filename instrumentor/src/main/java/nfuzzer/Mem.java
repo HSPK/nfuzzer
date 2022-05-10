@@ -14,8 +14,8 @@ public class Mem {
 	
 	public static final int SIZE = 131076;
 
-	int flen = SIZE;
-	int fsize = 0;
+	int fLen = SIZE;
+	int fSize = 0;
 	String shareFileName;
 	String sharePath;
 	MappedByteBuffer mapBuf = null;
@@ -49,21 +49,21 @@ public class Mem {
 			// 获取文件通道
 			fc = RAFile.getChannel();
 			// 获取文件大小
-			fsize = (int) fc.size();
-			if (fsize < flen) {
-				byte[] bb = new byte[flen - fsize];
+			fSize = (int) fc.size();
+			if (fSize < fLen) {
+				byte[] bb = new byte[fLen - fSize];
 				// 创建字节缓冲区
 				ByteBuffer bf = ByteBuffer.wrap(bb);
 				bf.clear();
 				// 设置文件通道的文件位置
-				fc.position(fsize);
+				fc.position(fSize);
 				// 将缓冲区内的字节写入通道中
 				fc.write(bf);
 				fc.force(false);
-				fsize = flen;
+				fSize = fLen;
 			}
 			// 将此通道的文件区域映射到内存
-			mapBuf = fc.map(FileChannel.MapMode.READ_WRITE, 0, fsize);
+			mapBuf = fc.map(FileChannel.MapMode.READ_WRITE, 0, fSize);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
