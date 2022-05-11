@@ -2,43 +2,41 @@
 <Peach xmlns="http://peachfuzzer.com/2012/Peach" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://peachfuzzer.com/2012/Peach ../peach.xsd">
 	<DataModel name="nacos_data">
-		<Block name="body_1">
-			<String value="dataId" length="6" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="123" length="3" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="group" length="5" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="DEFAULT_GROUP" length="13" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="content" length="7" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="123" length="3" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="desc" length="4" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="123" length="3" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="config_tags" length="11" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="123" length="3" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="type" length="4" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="text" length="4" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="appName" length="7" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="123" length="3" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="tenant" length="6" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="" length="0" mutable="true" />
-			<String value="&amp;" mutable="false" token="true" />
-			<String value="namespaceId" length="11" mutable="false" />
-			<String value="=" mutable="false" token="true" />
-			<String value="" mutable="true" />
-		</Block>
+		<String value="dataId" length="6" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="123" length="3" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="group" length="5" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="DEFAULT_GROUP" length="13" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="content" length="7" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="123" length="3" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="desc" length="4" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="123" length="3" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="config_tags" length="11" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="123" length="3" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="type" length="4" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="text" length="4" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="appName" length="7" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="123" length="3" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="tenant" length="6" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="" length="0" mutable="true" />
+		<String value="&amp;" mutable="false" token="true" />
+		<String value="namespaceId" length="11" mutable="false" />
+		<String value="=" mutable="false" token="true" />
+		<String value="" mutable="true" />
 	</DataModel>
 
 	<StateModel name="TheState" initialState="Initial">

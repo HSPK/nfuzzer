@@ -21,9 +21,8 @@ public class BuildPit {
                 + "\n\t"
                 + "xsi:schemaLocation=\"http://peachfuzzer.com/2012/Peach ../peach.xsd\">"
                 + "\n\t"
-                + "<DataModel name=\"nacos_data\">"
-                + "\n\t\t"
-                + "<Block name=\"body_" + st_body++ + "\">" + "\r\n";
+                + "<DataModel name=\"nacos_data\">" + "\r\n";
+
         System.out.print(line);
         out.write(line);
 
@@ -38,7 +37,7 @@ public class BuildPit {
                         data.charAt(i) == ':' || data.charAt(i) == ' ' ||
                         data.charAt(i) == '?' || data.charAt(i) == ';' ||
                         data.charAt(i) == '(' || data.charAt(i) == ')') {
-                    line = "\t\t\t" + "<String value=" + "\"" +
+                    line = "\t\t" + "<String value=" + "\"" +
                             data.charAt(i) + "\"" +
                             " mutable=\"false\" token=\"true\" />" +
                             "\r\n";
@@ -52,12 +51,12 @@ public class BuildPit {
                 if (data.charAt(i) == '"') {
 
                     if (!value.equals("")) {
-                        line = "\t\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"false\" />" + "\r\n";
+                        line = "\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"false\" />" + "\r\n";
                         System.out.print(line);
                         out.write(line);
                         value = "";
                     }
-                    line = "\t\t\t" + "<String value=" + "\"" + "&quot;" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
+                    line = "\t\t" + "<String value=" + "\"" + "&quot;" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
                     System.out.print(line);
                     out.write(line);
                     //out.flush(); 
@@ -67,11 +66,11 @@ public class BuildPit {
 
                 if (data.charAt(i) == '=') {
                     // key-value's key
-                    line = "\t\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"false\" />" + "\r\n";
+                    line = "\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"false\" />" + "\r\n";
                     System.out.print(line);
                     out.write(line);
                     value = "";
-                    line = "\t\t\t" + "<String value=" + "\"" + "=" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
+                    line = "\t\t" + "<String value=" + "\"" + "=" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
                     System.out.print(line);
                     out.write(line);
                     //out.flush();
@@ -81,11 +80,11 @@ public class BuildPit {
 
                 if (data.charAt(i) == '&') {
                     // key-value's value
-                    line = "\t\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"true\" />" + "\r\n";
+                    line = "\t\t" + "<String value=" + "\"" + value + "\"" + " length=\"" + value.length() + "\"" + " mutable=\"true\" />" + "\r\n";
                     System.out.print(line);
                     out.write(line);
                     value = "";
-                    line = "\t\t\t" + "<String value=" + "\"" + "&amp;" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
+                    line = "\t\t" + "<String value=" + "\"" + "&amp;" + "\"" + " mutable=\"false\" token=\"true\" />" + "\r\n";
                     System.out.print(line);
                     out.write(line);
                     // out.flush();
@@ -100,13 +99,12 @@ public class BuildPit {
                 //out.flush(); 
                 line = "";
             }
-            line = "\t\t\t" + "<String value=" + "\"" + value + "\"" + " mutable=\"true\" />" + "\r\n";
+            line = "\t\t" + "<String value=" + "\"" + value + "\"" + " mutable=\"true\" />" + "\r\n";
             System.out.print(line);
             out.write(line);
             line = "";
-//            out.write("\t\t\t" + "<String value=\"\\r\\n\" mutable=\"false\" token=\"true\" />" + "\n");
+//            out.write("\t\t" + "<String value=\"\\r\\n\" mutable=\"false\" token=\"true\" />" + "\n");
             //out.flush(); 
-            out.write("\t\t" + "</Block>\r\n");
             out.write("\t" + "</DataModel>\n");
 
             line = line + "\n\t<StateModel name=\"TheState\" initialState=\"Initial\">\n" + "\t\t<State name=\"Initial\">\n" + "\t\t\t<Action type=\"output\">\n" + "\t\t\t\t<DataModel ref=\"nacos_data\" />\n" + "\t\t\t\t<Data fileName=\"/dev/null\"/>\n" + "\t\t\t</Action>\n" + "\t\t</State>\n" + "\t</StateModel>\n\n\n";
