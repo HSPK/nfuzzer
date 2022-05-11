@@ -4152,7 +4152,7 @@ static void show_stats(void) {
 
   sprintf(tmp + banner_pad, "%s " cLGN
           " (%s)",  crash_mode ? cPIN "peruvian were-rabbit" :
-          cYEL "华为NCE漏洞挖掘系统", use_banner);
+          cYEL "IntelliFuzzer System", use_banner);
 
   SAYF("\n%s\n\n", tmp);
 
@@ -5105,12 +5105,14 @@ void linearize_chunks(struct chunk *c, struct chunk ***first_chunks_arr,
   *first_chunks_number = 0;
   *second_chunks_number = 0;
   *deeper_chunks_number = 0;
+
   *first_chunks_arr = (struct chunk **)malloc((1 << LINEARIZATION_UNIT) *
                                               sizeof(struct chunk *));
   *second_chunks_arr = (struct chunk **)malloc((1 << LINEARIZATION_UNIT) *
                                                sizeof(struct chunk *));
   *deeper_chunks_arr = (struct chunk **)malloc((1 << LINEARIZATION_UNIT) *
                                                sizeof(struct chunk *));
+  
   if (model_type == MODEL_PEACH) {
     first_level = 1;
     if (composite_mode) first_level += 2;
@@ -5172,6 +5174,8 @@ struct chunk *get_chunk_to_delete(struct chunk **chunks_array, u32 total_chunks,
       *del_from = start_byte;
       *del_len = chunk_to_delete->end_byte - start_byte + 1;
       break;
+    } else {
+      chunk_to_delete = NULL;
     }
   }
 
@@ -5230,6 +5234,26 @@ struct chunk *get_parent_to_insert_child(struct chunk **chunks_array,
   return target_parent_chunk;
 }
 
+void get_modifiable_chunks(struct chunk *chunk, struct chunk ***parr, int *cnt) {
+  struct chunk *p = chunk;
+
+}
+
+u8 intelli_havoc(struct queue_entry *q, s32 *temp_len, u8 **out_buf, u8 len) {
+  struct chunk *chunk = q->chunk;
+
+  // find a modifiable chunk to havoc
+
+  // random select a modifiable chunk
+
+  // random select a havoc method
+
+  // hovoc!!!
+  
+  // write back with chunk offset(modify children and sibling's start & end bytes)
+
+}
+
 /*
  * Parameters:
  *
@@ -5245,6 +5269,8 @@ u8 higher_order_fuzzing(struct queue_entry *current_queue_entry, s32 *temp_len,
     return changed_structure;
 
   struct chunk *current_chunk = current_queue_entry->chunk;
+  struct chunk **pchunk_modifiable_arr = NULL;
+  int modifiable_chunks_cnt = 0;
 
     u32 r = UR(12);
     u32 s = 3;
@@ -5264,14 +5290,19 @@ u8 higher_order_fuzzing(struct queue_entry *current_queue_entry, s32 *temp_len,
     switch (s) {
 
     /* 50% 的概率进行结构变异 */
-    case 3 ... 5:
+    case 3 ... 5: {
+      intelli_havoc(current_queue_entry, out_buf, temp_len, alloc_size);
       break;
+    }
 
     case 0: { /* Delete chunk */
+
       u32 del_from, del_len;
+
       struct chunk **first_chunks_array = NULL;
       struct chunk **second_chunks_array = NULL;
       struct chunk **deeper_chunks_array = NULL;
+
       u32 total_first_chunks = 0;
       u32 total_second_chunks = 0;
       u32 total_deeper_chunks = 0;
@@ -5793,6 +5824,7 @@ static u8 fuzz_one(char** argv) {
 
 #else
 
+  // skip some testcases
   if (pending_favored) {
 
     /* If we have any favored, non-fuzzed new arrivals in the queue,
@@ -5877,9 +5909,8 @@ static u8 fuzz_one(char** argv) {
   }
 
   /* Deferred cracking */
-  if (smart_mode && !queue_cur->chunk && initial_queue_num > 0) {
+  if (smart_mode && !queue_cur->chunk) {
     update_input_structure(queue_cur->fname, queue_cur);
-    --initial_queue_num;
   }
   // if (smart_mode && !queue_cur->chunk && (initial_queue_num > 0
   //     || UR(100) < (get_cur_time() - last_path_time) / 50)) {
@@ -7355,6 +7386,7 @@ second_optional_mutation:
 
   fuzz_one_common_fuzz_call:
 
+    // stage name
     if (smart_mode && has_smart_mut) {
       if (!splice_cycle) {
 

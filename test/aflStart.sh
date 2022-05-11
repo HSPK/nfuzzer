@@ -37,4 +37,4 @@ fi
 echo "stating afl"
 # start nfuzzer
 cd ../fuzzer
-./afl-fuzz -t 1000000 -m none -h -d -i $cur_dir/$indir -o $cur_dir/$outdir -w peach -g $cur_dir/pit.xml -- $cur_dir/interface -p 7007 @@
+./afl-fuzz -t 1000000 -m none -h -l -d -i $cur_dir/$indir -o $cur_dir/$outdir -w peach -g $cur_dir/pit.xml -- $cur_dir/interface -p 7007 @@
