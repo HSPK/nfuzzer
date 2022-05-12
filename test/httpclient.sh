@@ -1,2 +1,1 @@
-nfuzzer=../instrumentor/build/libs/nfuzzer.jar
-java -classpath .:$nfuzzer nfuzzer.webclient.NacosWebClient $@
+java -cp ../instrumentor/build/libs/nfuzzer.jar nfuzzer.webclient.NacosWebClient $@

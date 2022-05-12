@@ -37,6 +37,10 @@ public class NacosWebClient implements WebClientInterface {
     this.port = port;
   }
 
+  public void setToken(String token) {
+    this.token = token;
+  }
+
   @Override
   public int sendPostReq(String body) throws Exception {
     // setup uri
@@ -122,6 +126,7 @@ public class NacosWebClient implements WebClientInterface {
       // get option values
       host = cmd.getOptionValue("h", "127.0.0.1");
       body = cmd.getOptionValue("body", "");
+	  token = cmd.getOptionValue("token", "");
       port = Integer.parseInt(cmd.getOptionValue("p", "8848"));
     } catch (ParseException e) {
       logger.error("parse error: " + e.getMessage());
@@ -129,6 +134,7 @@ public class NacosWebClient implements WebClientInterface {
     }
 
     NacosWebClient webClient = new NacosWebClient(host, port);
+    webClient.setToken(token);
     try {
       webClient.sendPostReq(body);
     } catch (Exception e) {
