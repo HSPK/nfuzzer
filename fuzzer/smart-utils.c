@@ -24,7 +24,7 @@ FILE *get_new_log_file(pid_t pid) {
   char filespec[100];
   FILE *file;
 
-  if (sprintf(filespec, "%s/%u.log", dirname, pid) < 0)
+  if (sprintf(filespec, "%s/%s.log", dirname, "intelliAfl") < 0)
     return NULL;
 
   if ((file = fopen(filespec, "w")) == NULL)

@@ -16,11 +16,10 @@ enum {
   /* 02 */ READ_LINE_TOO_LONG
 };
 
-
 int hash_code(char *str) {
   int h = 0;
   char c;
-  
+
   while ((c = *(str++)) != '\0')
     h = 31 * h + c;
   return h;
@@ -36,7 +35,7 @@ int next_lower_chunk(char *path, int *length, int *hash, int *type_hash) {
     *length = 0;
     return 0;
   }
-  
+
   c = *s;
   while (c != '~' && c != '\n' && c != '\0' && c != ',') {
     c = *++s;
@@ -44,11 +43,11 @@ int next_lower_chunk(char *path, int *length, int *hash, int *type_hash) {
 
   *length = s - path;
 
-  if ((tmp = (char *) malloc(*length + 1)) == NULL) {
+  if ((tmp = (char *)malloc(*length + 1)) == NULL) {
     *length = 0;
     return 0;
   }
-    
+
   strncpy(tmp, path, *length);
   tmp[*length] = '\0';
   *hash = hash_code(tmp);
@@ -66,28 +65,31 @@ int next_lower_chunk(char *path, int *length, int *hash, int *type_hash) {
 
   *type_hash = hash_code(tmp);
   free(tmp);
-  
+
   if (c == '~')
     return -1;
 
-  return 0;  
+  return 0;
 }
 
-int split_line_on_comma(char *line, int *start_byte, int *end_byte, char **path, char *modifiable) {
+int split_line_on_comma(char *line, int *start_byte, int *end_byte, char **path,
+                        char *modifiable) {
   char *start, *end = line;
-  char *str = (char *) malloc(READ_LINE_BUFFER_SIZE);
+  char *str = (char *)malloc(READ_LINE_BUFFER_SIZE);
 
   if (str == NULL)
     return -1;
-  
+
   start = end;
-  while (isdigit(*end++));
+  while (isdigit(*end++))
+    ;
   strncpy(str, start, end - start - 1);
   str[end - start - 1] = '\0';
   *start_byte = atoi(str);
 
   start = end;
-  while (isdigit(*end++));
+  while (isdigit(*end++))
+    ;
   strncpy(str, start, end - start - 1);
   str[end - start - 1] = '\0';
   *end_byte = atoi(str);
@@ -117,7 +119,7 @@ void add_path(struct chunk **tree, char *line) {
   char *next;
   struct chunk *current_chunk = *tree;
   int non_last = -1;
-  
+
   int start_byte, end_byte;
   char modifiable;
 
@@ -136,7 +138,7 @@ void add_path(struct chunk **tree, char *line) {
 
     next = next + length + 1;
 
-    if ((current_chunk = (struct chunk *) malloc(sizeof(struct chunk))) == NULL)
+    if ((current_chunk = (struct chunk *)malloc(sizeof(struct chunk))) == NULL)
       return;
 
     current_chunk->id = h;
@@ -146,7 +148,7 @@ void add_path(struct chunk **tree, char *line) {
     current_chunk->modifiable = modifiable;
     current_chunk->next = NULL;
     current_chunk->children = NULL;
-  
+
     *tree = current_chunk;
   } else {
     int length;
@@ -161,11 +163,11 @@ void add_path(struct chunk **tree, char *line) {
     next = next + length + 1;
 
     if (current_chunk->id != h) {
-      struct chunk *new = (struct chunk *) malloc(sizeof(struct chunk));
+      struct chunk *new = (struct chunk *)malloc(sizeof(struct chunk));
 
       if (new == NULL)
-	return;
-      
+        return;
+
       new->next = current_chunk->next;
       current_chunk->next = new;
 
@@ -175,7 +177,7 @@ void add_path(struct chunk **tree, char *line) {
       current_chunk->start_byte = -1; /* Unknown */
       current_chunk->end_byte = -1;   /* Unknown */
       current_chunk->modifiable = modifiable;
-      current_chunk->children = NULL;      
+      current_chunk->children = NULL;
     }
 
     if (!current_chunk->modifiable)
@@ -197,9 +199,9 @@ void add_path(struct chunk **tree, char *line) {
     struct chunk *c = current_chunk->children;
 
     if (c == NULL) {
-      if ((c = (struct chunk *) malloc(sizeof(struct chunk))) == NULL) 
-	return;
-      
+      if ((c = (struct chunk *)malloc(sizeof(struct chunk))) == NULL)
+        return;
+
       current_chunk->children = c;
       current_chunk = c;
       current_chunk->id = h;
@@ -211,7 +213,7 @@ void add_path(struct chunk **tree, char *line) {
       current_chunk->children = NULL;
     } else {
       int chunk_found = 0;
-      
+
       do {
         if (c->id == h) {
           current_chunk = c;
@@ -222,14 +224,14 @@ void add_path(struct chunk **tree, char *line) {
       } while (c);
 
       if (!chunk_found) {
-	if ((c = (struct chunk *) malloc(sizeof(struct chunk))) == NULL) 
-	  return;
+        if ((c = (struct chunk *)malloc(sizeof(struct chunk))) == NULL)
+          return;
 
-	c->next = current_chunk->children;
-	current_chunk->children = c;
-	current_chunk = c;
+        c->next = current_chunk->children;
+        current_chunk->children = c;
+        current_chunk = c;
         current_chunk->id = h;
-	current_chunk->type = t;
+        current_chunk->type = t;
         current_chunk->start_byte = -1; /* Unknown */
         current_chunk->end_byte = -1;   /* Unknown */
         current_chunk->modifiable = modifiable;
@@ -249,7 +251,7 @@ void get_chunks(char *filespec, struct chunk **data_chunks) {
   FILE *chunk_file;
   char *line;
   size_t n;
-  
+
   *data_chunks = NULL;
 
   if ((chunk_file = fopen(filespec, "r")) == NULL)
